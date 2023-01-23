@@ -1,4 +1,4 @@
-use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color};
+use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color, sys::KeyCode};
 use snake::{Game, Vector2};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // init sdl
@@ -29,6 +29,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     ..
                 } => {
                     break 'game;
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Up),
+                    ..
+                } => {
+                    println!("Up is Pressed")
                 }
                 _ => {}
             }
