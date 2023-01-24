@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut canvas = window.into_canvas().build()?;
 
     // create game struct
-    let mut game = Game::new(Vector2(3, 3), 10, 5);
+    let mut game = Game::new(Vector2(3, 3), 20, 5);
 
     'game: loop {
         // handle input
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // draw
         canvas.set_draw_color(Color::BLACK);
         canvas.clear();
-        game.draw(&mut canvas)?;
+        game.draw(&mut canvas, 6)?;
         canvas.present();
 
         // lock to 60fps

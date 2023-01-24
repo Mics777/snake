@@ -5,13 +5,17 @@
 An implementation of snake in rust.
 
 
-## TODO
+
+### Key Features to add
 
 
-### Features to add
-
-
-- [ ] Player movement
+- [x] Player movement
 - [ ] Snake body
-- [ ] Fruit
+- [x] Fruit mechanics
+
+
+## Optional features
+
+- [ ] Create main menu UI
+- [ ] Create in game UI
 

@@ -55,12 +55,17 @@ impl Game {
         }
     }
 
-    pub fn draw(&self, canvas: &mut Canvas<Window>) -> Result<(), String> {
+    pub fn draw(&self, canvas: &mut Canvas<Window>, render_size: u32) -> Result<(), String> {
         // draw specific point
         let mut draw_point = |color, vec2: Vector2| {
             canvas.set_draw_color(color);
             canvas
-                .fill_rect(Rect::new(20 * vec2.0 as i32, 20 * vec2.1 as i32, 20, 20))
+                .fill_rect(Rect::new(
+                    (render_size * vec2.0) as i32,
+                    (render_size * vec2.1) as i32,
+                    render_size,
+                    render_size,
+                ))
                 .unwrap(); // '?' leads to complications
         };
         // draw snake
@@ -104,7 +109,6 @@ impl Game {
         // further slow down game
         // update when turn timer reaches 0
         if self.turnTimer == 0 {
-
             // move snake
             if let Some(dir) = &self.snake.direction {
                 match dir {
@@ -121,6 +125,7 @@ impl Game {
                 let x = rng.gen_range(0..self.size);
                 let y = rng.gen_range(0..self.size);
                 self.fruit = Vector2(x, y);
+                self.points += 1;
             }
 
             self.turnTimer = self.turnRate;
