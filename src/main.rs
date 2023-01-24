@@ -1,4 +1,4 @@
-use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color, sys::KeyCode};
+use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color};
 use snake::{Game, Vector2};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // init sdl
@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut canvas = window.into_canvas().build()?;
 
     // create game struct
-    let game = Game::new(Vector2(3, 3), 40);
+    let mut game = Game::new(Vector2(3, 3), 10, 5);
 
     'game: loop {
         // handle input
@@ -30,24 +30,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } => {
                     break 'game;
                 }
-                Event::KeyDown {
-                    keycode: Some(Keycode::Up),
-                    ..
-                } => {
-                    println!("Up is Pressed")
-                }
                 _ => {}
             }
         }
+        game.handle_input(&mut event_pump);
+
+        // update game
+        game.update();
 
         // draw
         canvas.set_draw_color(Color::BLACK);
         canvas.clear();
         game.draw(&mut canvas)?;
         canvas.present();
+
+        // lock to 60fps
+        std::thread::sleep(std::time::Duration::from_millis(16));
     }
 
-    // lock to 60fps
-    std::thread::sleep(std::time::Duration::from_millis(16));
     Ok(())
 }
