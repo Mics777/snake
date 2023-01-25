@@ -10,7 +10,7 @@ An implementation of snake in rust.
 
 
 - [x] Player movement
-- [ ] Snake body
+- [x] Snake body
 - [x] Fruit mechanics
 
 

@@ -2,7 +2,7 @@ use sdl2::{
     keyboard::Scancode, pixels::Color, rect::Rect, render::Canvas, video::Window, EventPump,
 };
 
-use rand::Rng;
+use rand::{thread_rng, Rng};
 
 #[derive(Clone, Copy)]
 pub struct Vector2(pub u32, pub u32);
@@ -12,8 +12,9 @@ pub struct Game {
     fruit: Vector2,
     snake: Snake,
     points: u32,
-    turnRate: u32,
-    turnTimer: u32,
+    immunity: u32,
+    turn_rate: u32,
+    turn_timer: u32,
 }
 
 pub struct Snake {
@@ -24,6 +25,7 @@ pub struct Snake {
     alive: bool,
 }
 
+#[derive(PartialEq)]
 pub enum Movement {
     Left,
     Right,
@@ -37,12 +39,20 @@ impl PartialEq for Vector2 {
     }
 }
 
+impl Vector2 {
+    fn gen(max: u32) -> Vector2 {
+        let mut rng = thread_rng();
+        Vector2(rng.gen_range(0..max), rng.gen_range(0..max))
+    }
+}
+
 impl Game {
     pub fn new(startpos: Vector2, size: u32, speed: u32) -> Game {
         Game {
             size,
-            fruit: Vector2(0, 0),
+            fruit: Vector2::gen(size),
             points: 0,
+            immunity: 5,
             snake: Snake {
                 alive: true,
                 length: 1,
@@ -50,12 +60,21 @@ impl Game {
                 body: Vec::new(),
                 direction: None,
             },
-            turnRate: speed,
-            turnTimer: speed,
+            turn_rate: speed,
+            turn_timer: speed,
         }
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>, render_size: u32) -> Result<(), String> {
+        // draw bg
+        canvas.set_draw_color(Color::GRAY);
+        canvas.fill_rect(Rect::new(
+            0,
+            0,
+            self.size * render_size,
+            self.size * render_size,
+        ))?;
+
         // draw specific point
         let mut draw_point = |color, vec2: Vector2| {
             canvas.set_draw_color(color);
@@ -68,9 +87,14 @@ impl Game {
                 ))
                 .unwrap(); // '?' leads to complications
         };
+
         // draw snake
         if self.snake.alive {
             draw_point(Color::GREEN, self.snake.head);
+
+            for segment in self.snake.body.iter() {
+                draw_point(Color::GREEN, *segment);
+            }
         }
 
         // draw fruit
@@ -81,16 +105,16 @@ impl Game {
 
     pub fn handle_input(&mut self, event_pump: &mut EventPump) {
         let check_pressed = |scancode| event_pump.keyboard_state().is_scancode_pressed(scancode);
-        if check_pressed(Scancode::Up) {
+        if check_pressed(Scancode::Up) && self.snake.direction != Some(Movement::Down) {
             self.snake.direction = Some(Movement::Up)
         }
-        if check_pressed(Scancode::Down) {
+        if check_pressed(Scancode::Down) && self.snake.direction != Some(Movement::Up) {
             self.snake.direction = Some(Movement::Down)
         }
-        if check_pressed(Scancode::Left) {
+        if check_pressed(Scancode::Left) && self.snake.direction != Some(Movement::Right) {
             self.snake.direction = Some(Movement::Left)
         }
-        if check_pressed(Scancode::Right) {
+        if check_pressed(Scancode::Right) && self.snake.direction != Some(Movement::Left) {
             self.snake.direction = Some(Movement::Right)
         }
     }
@@ -107,8 +131,13 @@ impl Game {
         };
 
         // further slow down game
-        // update when turn timer reaches 0
-        if self.turnTimer == 0 {
+        // update when turn_ timer reaches 0
+        if self.turn_timer == 0 {
+            // determine snake length
+            self.snake.length = 2 * (self.points + 1);
+
+            let prev_loc = self.snake.head.clone();
+
             // move snake
             if let Some(dir) = &self.snake.direction {
                 match dir {
@@ -119,18 +148,30 @@ impl Game {
                 }
             }
 
+            for segment in self.snake.body.iter() {
+                if self.snake.head == *segment && self.immunity == 0 {
+                    self.snake.alive = false;
+                }
+            }
+
+            self.snake.body.push(prev_loc);
+            if self.snake.body.len() as u32 > self.snake.length {
+                self.snake.body.remove(0);
+            }
+
             // eat fruit
             if self.snake.head == self.fruit {
-                let mut rng = rand::thread_rng();
-                let x = rng.gen_range(0..self.size);
-                let y = rng.gen_range(0..self.size);
-                self.fruit = Vector2(x, y);
+                self.fruit = Vector2::gen(self.size);
+                while self.snake.body.contains(&self.fruit) {
+                    self.fruit = Vector2::gen(self.size);
+                }
                 self.points += 1;
             }
 
-            self.turnTimer = self.turnRate;
+            if self.immunity != 0 { self.immunity -= 1; }
+            self.turn_timer = self.turn_rate;
         } else {
-            self.turnTimer -= 1;
+            self.turn_timer -= 1;
         }
     }
 }

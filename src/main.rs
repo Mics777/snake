@@ -4,20 +4,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // init sdl
     let sdl_ctx = sdl2::init()?;
 
+    let (tile_size, area): (u32, u32) = (20, 30);
+    let win_size = tile_size * area;
+
     // enable video, input
     let subsys_video = sdl_ctx.video()?;
     let mut event_pump = sdl_ctx.event_pump()?;
 
     // create window, canvas
     let window = subsys_video
-        .window("Snake", 600, 600)
+        .window("Snake", win_size, win_size)
         .position_centered()
         .build()?;
 
     let mut canvas = window.into_canvas().build()?;
 
     // create game struct
-    let mut game = Game::new(Vector2(3, 3), 20, 5);
+    let mut game = Game::new(Vector2(3, 3), area, 5);
+    let mut game_active = false;
 
     'game: loop {
         // handle input
@@ -30,18 +34,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } => {
                     break 'game;
                 }
+                Event::KeyDown { ..  } => { game_active = true; }
                 _ => {}
             }
         }
         game.handle_input(&mut event_pump);
 
         // update game
-        game.update();
+        if game_active { game.update(); }
 
         // draw
         canvas.set_draw_color(Color::BLACK);
         canvas.clear();
-        game.draw(&mut canvas, 6)?;
+        game.draw(&mut canvas, tile_size)?;
         canvas.present();
 
         // lock to 60fps
